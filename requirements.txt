@@ -1,0 +1,13 @@
+pandas
+numpy
+matplotlib
+seaborn
+plotly
+scipy
+statsmodels
+scikit-learn
+sqlalchemy
+psycopg2-binary
+faker
+python-dotenv
+ipykernel
