@@ -147,3 +147,26 @@ def generate_ab_assignments(users_db):
             )
 
     return pd.DataFrame(assignments)
+
+
+# Генерация данных для таблицы "events"
+def generate_events(users_db):
+    funnel_steps = ["signup", "onboarding_done", "trial_start", "activation"]
+    step_retention = [1.0, 0.7, 0.55, 0.4]
+
+    events = []
+
+    for _, user in users_db.iterrows():
+        user_id = user["id"]
+        current_time = user["signup_date"]
+
+        for step, conversion in zip(funnel_steps, step_retention):
+            if np.random.random() < conversion:
+                events.append(
+                    {"user_id": user_id, "event_type": step, "event_time": current_time}
+                )
+                current_time += timedelta(hours=random.randint(1, 72))
+            else:
+                break
+
+    return pd.DataFrame(events)
