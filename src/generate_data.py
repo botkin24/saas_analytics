@@ -116,3 +116,34 @@ def generate_payments(subscriptions_db):
             current_date += timedelta(days=30)
 
     return pd.DataFrame(payments)
+
+
+# Генерация данных для таблицы "ab_test_assignments"
+def generate_ab_assignments(users_db):
+    tests = ["onboarding", "pricing"]
+    variants = ["A", "B"]
+
+    # В тестах участвует пользователи, зарегистрировашиеся не более полугода назад
+    six_months_ago = pd.Timestamp.today() - pd.DateOffset(month=6)
+    recent_users = users_db[users_db["signup_date"] >= six_months_ago]
+
+    assignments = []
+
+    for _, user in recent_users.iterrows():
+        user_id = user["id"]
+        signup_date = user["signup_date"]
+
+        for test in tests:
+            variant = np.random.choice(variants, p=[0.5, 0.5])
+            assigned_at = signup_date + timedelta(days=random.randint(0, 3))
+
+            assignments.append(
+                {
+                    "user_id": user_id,
+                    "test": test,
+                    "variant": variant,
+                    "assigned_at": assigned_at,
+                }
+            )
+
+    return pd.DataFrame(assignments)
