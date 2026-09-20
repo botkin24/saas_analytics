@@ -1,9 +1,9 @@
-import pandas as pd
-import numpy as np
-
-from datetime import date, timedelta
-from faker import Faker
 import random
+from datetime import date, timedelta
+
+import numpy as np
+import pandas as pd
+from faker import Faker
 
 fake = Faker()
 
@@ -89,3 +89,30 @@ def generate_subscription(users_db):
     return pd.DataFrame(subscription)
 
 
+# Генерация данных для таблицы "payments"
+def generate_payments(subscriptions_db):
+    payments = []
+    today = pd.Timestamp.today().normalize()
+
+    for _, sub in subscriptions_db.iterrows():
+        sub_id = sub["id"]
+        start_date = sub["start_date"]
+        price = sub["price"]
+
+        end_limit = sub["end_date"] if sub["status"] == "canceled" else today
+
+        current_date = start_date
+        while current_date <= end_limit:
+            # Имитация, что 5% платежей не проходит успешно
+            status = np.random.choice(["succeeded", "failed"], p=[0.95, 0.05])
+            payments.append(
+                {
+                    "subscription_id": sub_id,
+                    "amount": price,
+                    "payment_date": current_date,
+                    "status": status,
+                }
+            )
+            current_date += timedelta(days=30)
+
+    return pd.DataFrame(payments)
