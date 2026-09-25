@@ -2,6 +2,8 @@
 import numpy as np
 import pandas as pd
 
+# ----- USERS -----
+
 
 # В 5% строках сделаем поле "country" как Nan | Таблица "users"
 def make_country_nan(df):
@@ -92,3 +94,72 @@ def make_users_dirty(df):
     )
 
     return df_users
+
+
+# ----- PAYMENTS -----
+
+
+# Добавление такого "subscription_id", которого нет в таблице "subscriptions" | Таблица "payments"
+def add_subscription_id_anomaly(df):
+    df_payments = df.copy()
+
+    random_rows = df_payments.sample(frac=0.01).index
+    df_payments.loc[random_rows, "subscription_id"] = np.random.randint(
+        9000, 10000, size=len(random_rows)
+    )
+
+    return df_payments
+
+
+# Добавление пропусков в "amount" | Таблица "payments"
+def add_amount_gaps(df):
+    df_payments = df.copy()
+
+    random_rows = df_payments.sample(frac=0.07).index
+    df_payments.loc[random_rows, "amount"] = np.nan
+
+    return df_payments
+
+
+# Добавление мусорных строк в "amount" | Таблица "payments"
+def add_amount_trash_strings(df):
+    df_payments = df.copy()
+    df_payments["amount"] = df_payments["amount"].astype(object)
+
+    def messify_amount(value):
+        fmt = np.random.choice(["space", "dollar", "comma"])
+        if fmt == "space":
+            return f"{value:,.0f}".replace(",", " ")
+        elif fmt == "dollar":
+            return f"${value:.2f}"
+        else:
+            return f"{value:.2f}".replace(".", ",")
+
+    random_rows = df_payments.sample(frac=0.05).index
+    df_payments.loc[random_rows, "amount"] = df_payments.loc[
+        random_rows, "amount"
+    ].apply(messify_amount)
+
+    return df_payments
+
+
+# Добавление аномальных сумм в "amount" | Таблица "payments"
+def add_amount_anomaly(df):
+    df_payments = df.copy()
+
+    anomaly_rows = df_payments.index[:5]
+    df_payments.loc[anomaly_rows[:2], "amount"] = -50.0
+    df_payments.loc[anomaly_rows[2:4], "amount"] = 5000.0
+    df_payments.loc[anomaly_rows[4], "amount"] = -999.99
+
+    return df_payments
+
+
+def make_payments_dirty(df):
+    df_payments = (
+        df.pipe(add_subscription_id_anomaly)
+        .pipe(add_amount_gaps)
+        .pipe(add_amount_trash_strings)
+        .pipe(add_amount_anomaly)
+    )
+    return df_payments
